@@ -1042,6 +1042,6 @@
     window.gjs = $g = Gjs;
   
     // welcome statement.
-    console.info('Hi,You. Welcome to Gjs World! If you want to get more content, please visited our site: https://guanqi.xyz!');
+    console.info('Hi,You. Welcome to Gjs World! If you want to get more content, please visited our site: https://github.com/gitguanqi/xqgjs !');
   
   })(window)
