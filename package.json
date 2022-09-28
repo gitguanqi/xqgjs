@@ -1,0 +1,22 @@
+{
+  "name": "xqgjs",
+  "version": "1.0.0",
+  "description": "This is a like jquery package.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitguanqi/xqgjs.git"
+  },
+  "keywords": [
+    "xqgjs",
+    "js"
+  ],
+  "author": "gitguanqi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gitguanqi/xqgjs/issues"
+  },
+  "homepage": "https://github.com/gitguanqi/xqgjs#readme"
+}
