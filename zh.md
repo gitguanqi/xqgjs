@@ -1,48 +1,48 @@
 # xqgjs
 
-This is a like jquery package.
+这是一个类似jQuery的前端JS库。
 
-[View Chinese documents](./zh.md)
+[查看英文文档](./README.md)
 
-## Install
+## 安装
 
-**Browser**:
+**游览器端**:
 
-import cdn
+引入cdn
 
 ```html
-<!-- Browser -->
+<!-- 游览器es5 -->
 <script src="https://unpkg.com/xqgjs/lib/xqgjs.min.js"></script>
-<!-- es module -->
+<!-- es6模块 -->
 <script type="module">
-    import xqgjs from '../lib/xqgjs-esm.min.js';
+    import xqgjs from './lib/xqgjs-esm.min.js';
 </script>
 ```
 
-## Usage
+## 使用
 
-+ info
++ 库版本信息
 
 ```js
 console.log(gjs.info);
 // {name: 'gjs', date: '2022-09-29', version: 'v1.0.2'}
 ```
 
-+ dom
++ dom操作
 
 ```js
 console.log(gjs('h3'));
 // init {0: h3}
 ```
 
-## View xqgjs
+## 查看示例
 
-Run this script to view the demonstration case: `npm run test:browser`.
+运行这个脚本查看展示案例：`npm run test:browser`。
 
-## ask questions
+## 提问题
 
 [submit your question](https://github.com/gitguanqi/xqgjs/issues/new)
 
-## Author
+## 作者
 
 [@gitguanqi](https://github.com/gitguanqi)

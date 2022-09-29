@@ -1,22 +1,28 @@
 {
   "name": "xqgjs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "This is a like jquery package.",
+  "main": "lib/xqgjs.js",
+  "directories": {
+      "lib": "lib",
+      "test": "test"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+      "test": "echo Error: no test specified && exit 1",
+      "test:browser": "live-server --port=4001 --host=localhost"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gitguanqi/xqgjs.git"
+      "type": "git",
+      "url": "git+https://github.com/gitguanqi/xqgjs.git"
   },
   "keywords": [
-    "xqgjs",
-    "js"
+      "js",
+      "xqgjs"
   ],
   "author": "gitguanqi",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gitguanqi/xqgjs/issues"
+      "url": "https://github.com/gitguanqi/xqgjs/issues"
   },
   "homepage": "https://github.com/gitguanqi/xqgjs#readme"
 }
