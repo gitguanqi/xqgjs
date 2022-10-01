@@ -41,7 +41,7 @@ console.log(gjs('h3'));
 
 ## 提问题
 
-[submit your question](https://github.com/gitguanqi/xqgjs/issues/new)
+[提出问题](https://github.com/gitguanqi/xqgjs/issues/new)
 
 ## 作者
 
