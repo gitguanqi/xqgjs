@@ -1,6 +1,6 @@
 {
   "name": "xqgjs",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "This is a like jquery package.",
   "main": "lib/xqgjs.js",
   "directories": {
