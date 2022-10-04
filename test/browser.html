@@ -6,16 +6,80 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xqgjs browser test</title>
+    <script src="https://cdn.guanqi.xyz/libs/xlsxjs/0.17.4/js/xlsx.full.min.js"></script>
 </head>
 
 <body>
     <h3>xqgjs browser test</h3>
+    <div>
+        <button id="downloadImg">下载图片</button>
+        <button id="exportExcel" type="button">导出Excel兼容IE</button>
+    </div>
+    <div id="myDiv">
+        <table id="tableExcel" width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+                <td colspan="5" style="text-align: center;">html 表格导出道Excel</td>
+            </tr>
+            <tr style="background-color: #FFC000;text-align: center;">
+                <td>列标题1</td>
+                <td>列标题2</td>
+                <td>类标题3</td>
+                <td>列标题4</td>
+                <td>列标题5</td>
+            </tr>
+            <tr style="text-align: center;">
+                <td>aaa</td>
+                <td>bbb</td>
+                <td>ccc</td>
+                <td>ddd</td>
+                <td>eee</td>
+            </tr>
+            <tr style="text-align: center;">
+                <td>AAA</td>
+                <td>BBB</td>
+                <td>CCC</td>
+                <td>DDD</td>
+                <td>EEE</td>
+            </tr>
+            <tr style="text-align: center;">
+                <td>FFF</td>
+                <td>GGG</td>
+                <td>HHH</td>
+                <td>III</td>
+                <td>JJJ</td>
+            </tr>
+        </table>
+    </div>
+    <hr>
+    <h2>导入文件</h2>
+    <p>选择一个excel文件。</p>
+    <input type="file" onchange="$g.importFile(this)">
+    <div id="demo"></div>
     <script src="../lib/xqgjs.js"></script>
     <script>
         console.log(gjs.info);
         // {name: 'gjs', date: '2022-09-29', version: 'v1.0.2'}
         console.log(gjs('h3'));
         // init {0: h3}
+
+        // export file
+        let exportExcelBtn = $g('#exportExcel')[0];
+        $g.addEvent(exportExcelBtn, 'click', exportExcelSet, false);
+
+        function exportExcelSet() {
+            $g.exportExcel('myDiv', 'example' + Date.parse(new Date()) + '.xls');
+        }
+
+        // download file
+        let dlBtn = $g('#downloadImg')[0];
+        $g.addEvent(dlBtn, 'click', download, false);
+        
+        function download () {  
+            let url = './img/dlam.jpg',
+            name = 'xqgjs-dlam001.jpg';
+            $g.downloadFile(url, name);
+        }
+
     </script>
 </body>
 
