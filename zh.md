@@ -12,7 +12,7 @@
 
 ```html
 <!-- 游览器es5 -->
-<script src="https://unpkg.com/xqgjs/lib/xqgjs.min.js"></script>
+<script src="https://xqgj.cc/xqcdn/libs/xqgjs/xqgjs.min.js"></script>
 <!-- es6模块 -->
 <script type="module">
     import xqgjs from './lib/xqgjs-esm.min.js';

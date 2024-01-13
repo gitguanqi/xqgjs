@@ -12,7 +12,7 @@ import cdn
 
 ```html
 <!-- Browser -->
-<script src="https://unpkg.com/xqgjs/lib/xqgjs.min.js"></script>
+<script src="https://xqgj.cc/xqcdn/libs/xqgjs/xqgjs.min.js"></script>
 <!-- es module -->
 <script type="module">
     import xqgjs from '../lib/xqgjs-esm.min.js';
