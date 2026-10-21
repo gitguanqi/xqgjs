@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>loading.min · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../lib/loading/css/loading.min.css">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>loading 组件（压缩）</h1>
+            <p>加载 <code>../lib/loading/js/loading.min.js</code>，同样不写 <code>id</code>，并且不配置图片与颜色。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./plugins.html">plugins</a>
+        <a href="./loading.html">loading</a>
+        <a href="./loading-min.html" aria-current="page">loading.min</a>
+        <a href="./mourn.html">mourn</a>
+        <a href="./mourn-min.html">mourn.min</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <button id="btnShow">显示遮罩</button>
+            <button id="btnHide">隐藏遮罩</button>
+        </div>
+        <pre class="out" id="output">未配置 data-img / data-color 时不应出现坏值。</pre>
+    </section>
+
+    <script src="./helpers/harness.js"></script>
+    <script src="../lib/loading/js/loading.min.js" data-hide="none"></script>
+    <script>
+        const overlay = document.querySelector('[data-xq-loading]');
+
+        XQTest.test('压缩版同样能在无 id 时启动', () => {
+            XQTest.ok(overlay, 'overlay exists');
+            XQTest.eq(typeof window.xqLoading, 'function');
+        });
+
+        XQTest.test('缺少 data-color 时不写 inline 颜色', () => {
+            const circle = overlay.querySelector('.loading-circle');
+            XQTest.eq(circle.style.borderLeftColor, '', 'no inline border-left-color');
+        });
+
+        XQTest.test('缺少 data-img 时不渲染 img', () => {
+            XQTest.eq(overlay.querySelector('.loading-img'), null);
+            XQTest.eq(overlay.innerHTML.includes('src'), false, 'an empty src would re-request the page');
+        });
+
+        XQTest.test('markup 里没有 undefined', () => {
+            XQTest.eq(overlay.innerHTML.includes('undefined'), false);
+            XQTest.eq(overlay.className.includes('undefined'), false);
+        });
+
+        XQTest.test('样式表里的隐藏规则生效', () => {
+            window.xqLoading.hide();
+            XQTest.eq(getComputedStyle(overlay).display, 'none');
+        });
+
+        window.xqLoading.hide();
+
+        document.getElementById('btnShow').addEventListener('click', () => window.xqLoading.show());
+        document.getElementById('btnHide').addEventListener('click', () => window.xqLoading.hide());
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

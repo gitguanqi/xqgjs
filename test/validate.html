@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>validate · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>校验函数</h1>
+            <p>8 个 <code>check*</code> 之前全部抛 <code>ReferenceError</code>，因为正则挂在 <code>gjs.regAll</code> 上却按裸变量引用。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./validate.html" aria-current="page">validate</a>
+        <a href="./storage.html">storage</a>
+        <a href="./net.html">net</a>
+        <a href="./file.html">file</a>
+        <a href="./plugins.html">plugins</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <input id="probe" type="text" value="user@example.com" aria-label="待校验的值">
+            <button id="btnEmail">checkEmail</button>
+            <button id="btnMobile">checkMobile</button>
+            <button id="btnName">checkName</button>
+        </div>
+        <pre class="out" id="output">输入一个值再点按钮。</pre>
+    </section>
+
+    <script src="../lib/xqgjs.js"></script>
+    <script src="./helpers/harness.js"></script>
+    <script>
+        const CASES = [
+            ['checkName', '张三abc', ''],
+            ['checkUserName', 'a1234', '1abcd'],
+            ['checkNameTwo', 'abc123', 'ab'],
+            ['checkpassWord', 'Abc123!', 'abc123'],
+            ['checkMobile', '13800138000', 'not-a-number'],
+            ['checkPost', '123456', 'ab'],
+            ['checkEmail', 'user@example.com', 'user@example'],
+            ['checkCardId', '110101199003071234', '11010119900307']
+        ];
+
+        CASES.forEach(([method, good, bad]) => {
+            XQTest.test(method + ' 返回布尔值而不是抛错', () => {
+                XQTest.eq(gjs[method](good), true, method + '(' + JSON.stringify(good) + ')');
+                XQTest.eq(gjs[method](bad), false, method + '(' + JSON.stringify(bad) + ')');
+            });
+        });
+
+        XQTest.test('非字符串一律返回 false', () => {
+            for (const value of [undefined, null, 123, {}, []]) {
+                for (const [method] of CASES) {
+                    XQTest.eq(gjs[method](value), false, method + ' with ' + String(value));
+                }
+            }
+        });
+
+        XQTest.test('checkPassword 是 checkpassWord 的别名', () => {
+            XQTest.eq(gjs.checkPassword, gjs.checkpassWord);
+            XQTest.eq(gjs.checkPassword('Abc123!'), true);
+        });
+
+        XQTest.test('regAll 仍然对外可用', () => {
+            XQTest.eq(Object.prototype.toString.call(gjs.regAll.emailReg), '[object RegExp]');
+            XQTest.eq(Object.keys(gjs.regAll).length, 19);
+        });
+
+        XQTest.test('空字符串不再通过 checkName', () => {
+            XQTest.eq(gjs.checkName(''), false);
+        });
+
+        const output = document.getElementById('output');
+        const probe = document.getElementById('probe');
+        const show = (method) => {
+            output.textContent = method + '(' + JSON.stringify(probe.value) + ') = ' + gjs[method](probe.value);
+        };
+        document.getElementById('btnEmail').addEventListener('click', () => show('checkEmail'));
+        document.getElementById('btnMobile').addEventListener('click', () => show('checkMobile'));
+        document.getElementById('btnName').addEventListener('click', () => show('checkName'));
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

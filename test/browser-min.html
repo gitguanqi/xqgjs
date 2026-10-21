@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>browser.min · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>UMD 构建（压缩）</h1>
+            <p>加载 <code>../lib/xqgjs.min.js</code>，确认压缩产物与可读版行为一致。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./browser-min.html" aria-current="page">browser.min</a>
+        <a href="./esm.html">esm</a>
+        <a href="./esm-min.html">esm.min</a>
+        <a href="./validate.html">validate</a>
+        <a href="./storage.html">storage</a>
+        <a href="./net.html">net</a>
+        <a href="./file.html">file</a>
+        <a href="./plugins.html">plugins</a>
+        <a href="./loading.html">loading</a>
+        <a href="./mourn.html">mourn</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>可交互示例</h2>
+        <p id="demoText">这一行由压缩版库改写。</p>
+        <div class="row">
+            <button id="btnDemo">运行一次</button>
+        </div>
+    </section>
+
+    <script src="../lib/xqgjs.min.js"></script>
+    <script src="./helpers/harness.js"></script>
+    <script>
+        XQTest.test('压缩版仍然暴露 gjs 与 $g', () => {
+            XQTest.eq(typeof window.gjs, 'function');
+            XQTest.eq(window.gjs, window.$g);
+        });
+
+        XQTest.test('版本信息与源码一致', () => {
+            XQTest.ok(/^v\d+\.\d+\.\d+$/.test(gjs.info.version), gjs.info.version);
+            XQTest.ok(/^\d{4}-\d{2}-\d{2}$/.test(gjs.info.date), gjs.info.date);
+        });
+
+        XQTest.test('关键方法没有在压缩中丢失', () => {
+            for (const name of ['checkName', 'checkUserName', 'checkNameTwo', 'checkpassWord',
+                'checkMobile', 'checkPost', 'checkEmail', 'checkCardId', 'each', 'ready',
+                'secondToTime', 'getUrlArgs', 'http', 'downloadFile', 'exportExcel']) {
+                XQTest.eq(typeof gjs[name], 'function', name);
+            }
+        });
+
+        XQTest.test('原型链完好', () => {
+            XQTest.eq(gjs.fn.init.prototype, gjs.fn);
+            XQTest.ok(gjs('#nope') instanceof gjs);
+        });
+
+        XQTest.test('校验函数可用', () => {
+            XQTest.eq(gjs.checkEmail('user@example.com'), true);
+            XQTest.eq(gjs.checkCardId('110101199003071234'), true);
+            XQTest.eq(gjs.checkPost('ab'), false);
+        });
+
+        XQTest.test('css 写入全部属性（压缩后仍无提前 return）', () => {
+            const box = document.createElement('div');
+            document.body.appendChild(box);
+            gjs.css(box, { color: 'blue', display: 'none' });
+            XQTest.eq(box.style.color, 'blue');
+            XQTest.eq(box.style.display, 'none');
+            box.remove();
+        });
+
+        XQTest.test('secondToTime 没有退化成旧行为', () => {
+            XQTest.eq(gjs.secondToTime(10), '00:00:10');
+            XQTest.eq(gjs.secondToTime(600), '00:10:00');
+        });
+
+        document.getElementById('btnDemo').addEventListener('click', () => {
+            gjs('#demoText').text('压缩版运行于 ' + new Date().toLocaleTimeString());
+        });
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

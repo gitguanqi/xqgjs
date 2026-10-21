@@ -1,13 +1,103 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>加载测试</title>
+    <title>loading · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../lib/loading/css/loading.css">
+    <link rel="stylesheet" href="./demo.css">
 </head>
+
 <body>
-    <script src="../lib/loading/js/loading.js" id="xqloading" data-img="https://www.guanqi.xyz/zb_users/upload/2022/09/202209171663407455922663.png" data-color="#00f"></script>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>loading 组件（未压缩）</h1>
+            <p>脚本标签故意不写 <code>id</code>：它之前靠 <code>id="xqloading"</code> 找自己，没有就抛 <code>TypeError</code>。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./plugins.html">plugins</a>
+        <a href="./loading.html" aria-current="page">loading</a>
+        <a href="./loading-min.html">loading.min</a>
+        <a href="./mourn.html">mourn</a>
+        <a href="./mourn-min.html">mourn.min</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <button id="btnShow">显示遮罩</button>
+            <button id="btnHide">隐藏遮罩</button>
+        </div>
+        <pre class="out" id="output">遮罩由脚本标签自动挂载。</pre>
+    </section>
+
+    <script src="./helpers/harness.js"></script>
+    <script src="../lib/loading/js/loading.js" data-img="./img/logo.svg" data-color="#2f6fed" data-hide="none"></script>
+    <script>
+        const overlay = document.querySelector('[data-xq-loading]');
+
+        XQTest.test('脚本标签没有 id 也能启动', () => {
+            XQTest.ok(overlay, 'the overlay must exist');
+            XQTest.eq(typeof window.xqLoading, 'function', 'window.xqLoading');
+        });
+
+        XQTest.test('data-color 应用到圆环上', () => {
+            const circle = overlay.querySelector('.loading-circle');
+            XQTest.ok(circle, 'circle element');
+            XQTest.eq(circle.style.borderLeftColor, 'rgb(47, 111, 237)', 'border-left-color from data-color');
+        });
+
+        XQTest.test('data-img 加载为绝对地址', () => {
+            const img = overlay.querySelector('.loading-img');
+            XQTest.ok(img, 'image element');
+            const expected = new URL('./img/logo.svg', window.location.href).href;
+            XQTest.eq(img.src, expected, 'image src must resolve');
+        });
+
+        XQTest.test('没有出现 undefined 字样', () => {
+            XQTest.eq(overlay.innerHTML.includes('undefined'), false, 'markup');
+            XQTest.eq(overlay.className.includes('undefined'), false, 'class');
+        });
+
+        XQTest.test('重复调用不会插入第二个遮罩', () => {
+            window.xqLoading('./img/logo.svg', '#000');
+            XQTest.eq(document.querySelectorAll('[data-xq-loading]').length, 1);
+        });
+
+        XQTest.test('hide 后遮罩不再占据视口', () => {
+            window.xqLoading.hide();
+            XQTest.eq(overlay.classList.contains('is-hidden'), true);
+            XQTest.eq(overlay.classList.contains('active'), true, 'legacy class kept');
+            const display = getComputedStyle(overlay).display;
+            XQTest.eq(display, 'none', 'computed display');
+        });
+
+        // 断言结束后保持页面可用
+        window.xqLoading.hide();
+
+        document.getElementById('btnShow').addEventListener('click', () => {
+            window.xqLoading.show();
+            document.getElementById('output').textContent = '已显示';
+        });
+
+        document.getElementById('btnHide').addEventListener('click', () => {
+            window.xqLoading.hide();
+            document.getElementById('output').textContent = '已隐藏';
+        });
+
+        XQTest.run();
+    </script>
 </body>
+
 </html>

@@ -1,0 +1,357 @@
+:root {
+    color-scheme: light;
+    --ink: #1a1d24;
+    --muted: #5c6472;
+    --line: #d8dde6;
+    --bg: #ffffff;
+    --panel: #f6f8fb;
+    --accent: #2f6fed;
+    --pass: #147d46;
+    --fail: #b3261e;
+    --pending: #8a6d1f;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    padding: 24px 20px 64px;
+    max-width: 960px;
+    margin: 0 auto;
+    overflow-wrap: break-word;
+}
+
+header.page {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
+}
+
+header.page img {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+}
+
+header.page h1 {
+    font-size: 19px;
+    margin: 0;
+    line-height: 1.3;
+}
+
+header.page p {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+nav.pages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+nav.pages a {
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+nav.pages a:hover,
+nav.pages a[aria-current="page"] {
+    background: var(--panel);
+    border-color: var(--accent);
+}
+
+.summary {
+    display: inline-block;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: var(--panel);
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.summary.is-pass {
+    color: var(--pass);
+}
+
+.summary.is-fail {
+    color: var(--fail);
+}
+
+ol#checks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+li.check {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--line);
+    align-items: baseline;
+}
+
+li.check:first-child {
+    border-top: 0;
+}
+
+li.check .badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-align: center;
+    border-radius: 999px;
+    padding: 2px 0;
+    border: 1px solid currentColor;
+}
+
+li.check .label {
+    min-width: 0;
+}
+
+li.check .detail {
+    grid-column: 2;
+    color: var(--muted);
+    font-size: 12.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow-wrap: anywhere;
+}
+
+li.check .detail:empty {
+    display: none;
+}
+
+li.is-pending .badge {
+    color: var(--pending);
+}
+
+li.is-pass .badge {
+    color: var(--pass);
+}
+
+li.is-fail {
+    background: #fdf3f2;
+}
+
+li.is-fail .badge {
+    color: var(--fail);
+}
+
+li.is-skip .badge {
+    color: var(--muted);
+}
+
+section.demo {
+    margin-top: 26px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+}
+
+section.demo h2 {
+    font-size: 15px;
+    margin: 0 0 12px;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+button,
+input[type="file"] {
+    font: inherit;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+pre.out,
+#demo {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12.5px;
+    max-height: 160px;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.stage {
+    position: relative;
+    height: 150px;
+    margin-top: 12px;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.drag-box {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 90px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e8f0ff;
+    border: 1px solid var(--accent);
+    border-radius: 7px;
+    cursor: grab;
+    font-size: 12px;
+    user-select: none;
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.panel {
+    display: none;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-top: 10px;
+    background: #fff;
+}
+
+.panel.active {
+    display: block;
+}
+
+.carousel {
+    position: relative;
+    width: 240px;
+    max-width: 100%;
+    height: 90px;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+}
+
+.carousel-track {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    transition: left .25s ease;
+}
+
+.carousel-track li {
+    width: 240px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #fff;
+}
+
+.carousel-track li:nth-child(1) { background: #2f6fed; }
+.carousel-track li:nth-child(2) { background: #7a4fd0; }
+.carousel-track li:nth-child(3) { background: #1c9a6c; }
+
+.dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--line);
+    display: block;
+    cursor: pointer;
+}
+
+.dots i.active {
+    background: var(--accent);
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 16px 12px 48px;
+    }
+
+    header.page {
+        gap: 10px;
+    }
+
+    li.check {
+        grid-template-columns: 74px minmax(0, 1fr);
+        padding: 9px 10px;
+    }
+
+    .carousel,
+    .carousel-track li {
+        width: 100%;
+    }
+
+    .carousel-track li {
+        flex: 0 0 100%;
+    }
+}

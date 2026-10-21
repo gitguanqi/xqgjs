@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>net · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>网络请求</h1>
+            <p>打本地 fixtures。<code>http</code> 之前只认 200，且非 JSON 响应会抛未捕获的 <code>SyntaxError</code>。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./validate.html">validate</a>
+        <a href="./storage.html">storage</a>
+        <a href="./net.html" aria-current="page">net</a>
+        <a href="./file.html">file</a>
+        <a href="./plugins.html">plugins</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <button id="btnOk">GET /fixtures/data.json</button>
+            <button id="btnBad">GET /fixtures/404</button>
+            <button id="btnText">GET /fixtures/notjson.txt</button>
+            <button id="btnPost">POST /fixtures/echo</button>
+        </div>
+        <pre class="out" id="output">点一个按钮。</pre>
+    </section>
+
+    <script src="../lib/xqgjs.js"></script>
+    <script src="./helpers/harness.js"></script>
+    <script>
+        XQTest.test('http 成功时返回解析后的 JSON', async () => {
+            const result = await gjs.http('get', '/fixtures/data.json');
+            XQTest.eq(result.code, 200);
+            XQTest.eq(result.msg, 'get_succ');
+            XQTest.eq(result.data.data.ok, true);
+            XQTest.eq(result.data.data.items.length, 3);
+        });
+
+        XQTest.test('http 把非 2xx 变成带 msg 的 reject', async () => {
+            let error = null;
+            try {
+                await gjs.http('get', '/fixtures/404');
+            } catch (err) {
+                error = err;
+            }
+            XQTest.ok(error, 'should reject');
+            XQTest.eq(error.msg, 'get_fail');
+            XQTest.eq(error.code, 404);
+        });
+
+        XQTest.test('http 把非 JSON 响应标记为 parse_fail 并保留原文', async () => {
+            let error = null;
+            try {
+                await gjs.http('get', '/fixtures/notjson.txt');
+            } catch (err) {
+                error = err;
+            }
+            XQTest.ok(error, 'should reject');
+            XQTest.eq(error.msg, 'parse_fail');
+            XQTest.eq(error.data.raw, 'not-json');
+        });
+
+        XQTest.test('httpSimple 成功回调 code 200', async () => {
+            const result = await new Promise((resolve) => {
+                gjs.httpSimple('get', '/fixtures/data.json', null, resolve);
+            });
+            XQTest.eq(result.code, 200);
+            XQTest.eq(result.data.ok, true);
+        });
+
+        XQTest.test('httpSimple 失败回调 code 101', async () => {
+            const result = await new Promise((resolve) => {
+                gjs.httpSimple('get', '/fixtures/404', null, resolve);
+            });
+            XQTest.eq(result.code, 101);
+            XQTest.eq(result.msg, 'get_fail');
+        });
+
+        XQTest.test('POST 会把请求体送到服务端', async () => {
+            const result = await gjs.http('post', '/fixtures/echo', 'q=xqgjs');
+            XQTest.eq(result.data.data.method, 'POST');
+            XQTest.eq(result.data.data.body, 'q=xqgjs');
+        });
+
+        // a fixture that never answers should fail the check, not hang the whole suite
+        const withTimeout = (promise, label) => Promise.race([
+            promise,
+            new Promise((resolve, reject) => {
+                setTimeout(() => reject(new Error(label + ' timed out')), 5000);
+            })
+        ]);
+
+        XQTest.test('jsonp 拼出的回调参数正确，并且真的能回调', async () => {
+            const first = new Promise((resolve) => { window.handleJsonp = resolve; });
+            const script = gjs.jsonp('/fixtures/jsonp.js', 'handleJsonp');
+            XQTest.includes(script.src, 'callback=handleJsonp');
+            const payload = await withTimeout(first, 'jsonp callback');
+            XQTest.eq(payload.items.length, 3, 'the callback receives the parsed payload');
+            script.remove();
+
+            const second = new Promise((resolve) => { window.handleJsonp2 = resolve; });
+            const withQuery = gjs.jsonp('/fixtures/jsonp.js?v=1', 'handleJsonp2');
+            XQTest.includes(withQuery.src, '&callback=handleJsonp2', 'an existing query string gets &');
+            await withTimeout(second, 'jsonp callback with a query string');
+            withQuery.remove();
+
+            delete window.handleJsonp;
+            delete window.handleJsonp2;
+        });
+
+        XQTest.test('getUrlArgs 覆盖各种边界', () => {
+            XQTest.eq(JSON.stringify(gjs.getUrlArgs('https://a.com/p')), '{}');
+            XQTest.eq(JSON.stringify(gjs.getUrlArgs('?a=1')), '{"a":"1"}');
+            XQTest.eq(JSON.stringify(gjs.getUrlArgs('?a=1&a=2')), '{"a":"2"}');
+            XQTest.eq(JSON.stringify(gjs.getUrlArgs('?a=1#hash')), '{"a":"1"}');
+            XQTest.eq(JSON.stringify(gjs.getUrlArgs('?name=%E4%B8%AD%E6%96%87')), '{"name":"中文"}');
+        });
+
+        const output = document.getElementById('output');
+        const run = async (label, type, url, data) => {
+            try {
+                const result = await gjs.http(type, url, data);
+                output.textContent = label + ' → ' + JSON.stringify(result);
+            } catch (error) {
+                output.textContent = label + ' → rejected: ' + JSON.stringify(error);
+            }
+        };
+
+        document.getElementById('btnOk').addEventListener('click', () => run('data.json', 'get', '/fixtures/data.json'));
+        document.getElementById('btnBad').addEventListener('click', () => run('404', 'get', '/fixtures/404'));
+        document.getElementById('btnText').addEventListener('click', () => run('notjson', 'get', '/fixtures/notjson.txt'));
+        document.getElementById('btnPost').addEventListener('click', () => run('echo', 'post', '/fixtures/echo', 'q=xqgjs'));
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

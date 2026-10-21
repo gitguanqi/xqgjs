@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "noEmit": true,
+        "target": "ES2020",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "lib": ["ES2020", "DOM"],
+        "skipLibCheck": false,
+        "forceConsistentCasingInFileNames": true,
+        "moduleDetection": "legacy",
+        "noUnusedLocals": false
+    },
+    "files": [
+        "usage-cjs.ts",
+        "usage-esm.mts",
+        "usage-global.ts"
+    ]
+}

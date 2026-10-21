@@ -1,0 +1,8 @@
+# The minified artifacts are compared byte for byte by scripts/build.js --check, so the
+# sources must not change line endings depending on who checked them out.
+* text=auto eol=lf
+
+*.jpg binary
+*.png binary
+*.ico binary
+*.woff2 binary

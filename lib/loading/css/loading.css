@@ -12,7 +12,8 @@
     z-index: 108;
 }
 
-.loading.active {
+.loading.active,
+.loading.is-hidden {
     display: none;
 }
 
@@ -23,7 +24,8 @@
     align-items: center;
 }
 
-.loading-inner span {
+.loading-inner span,
+.loading-inner .loading-circle {
     display: inline-block;
     width: 58px;
     height: 58px;
@@ -34,13 +36,29 @@
     z-index: 3;
 }
 
-.loading-inner img {
+.loading-inner img,
+.loading-inner .loading-img {
     position: absolute;
     display: inline-block;
     width: 35px;
     height: auto;
     max-height: 35px;
     z-index: 2;
+}
+
+@media (max-width: 480px) {
+    .loading-inner span,
+    .loading-inner .loading-circle {
+        width: 44px;
+        height: 44px;
+        border-width: 5px;
+    }
+
+    .loading-inner img,
+    .loading-inner .loading-img {
+        width: 26px;
+        max-height: 26px;
+    }
 }
 
 @keyframes donut-spin {

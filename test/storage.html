@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>storage · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>本地存储与 Cookie</h1>
+            <p><code>getLocal</code> 之前把读到的值又 encode 了一遍，并会把缺失键读成字符串 <code>"null"</code>。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./validate.html">validate</a>
+        <a href="./storage.html" aria-current="page">storage</a>
+        <a href="./net.html">net</a>
+        <a href="./file.html">file</a>
+        <a href="./plugins.html">plugins</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <input id="probe" type="text" value="a b&c=%20中文" aria-label="待存储的值">
+            <button id="btnSave">setLocal</button>
+            <button id="btnRead">getLocal</button>
+            <button id="btnDrop">rmLocal</button>
+        </div>
+        <pre class="out" id="output">点击写入，再读取。</pre>
+    </section>
+
+    <script src="../lib/xqgjs.js"></script>
+    <script src="./helpers/harness.js"></script>
+    <script>
+        const TRICKY = 'a b&c=%20中文?';
+
+        XQTest.test('localStorage 往返不改变原值', () => {
+            gjs.setLocal('probe', TRICKY);
+            XQTest.eq(localStorage.getItem('probe'), encodeURIComponent(TRICKY), 'stored form is encoded exactly once');
+            XQTest.eq(gjs.getLocal('probe'), TRICKY, 'read form is decoded back');
+        });
+
+        XQTest.test('缺失的键返回 null，而不是字符串 "null"', () => {
+            XQTest.eq(gjs.getLocal('definitely-not-set'), null);
+            XQTest.eq(gjs.getSession('definitely-not-set'), null);
+        });
+
+        XQTest.test('sessionStorage 行为一致', () => {
+            gjs.setSession('probe', TRICKY);
+            XQTest.eq(gjs.getSession('probe'), TRICKY);
+            gjs.rmSession('probe');
+            XQTest.eq(gjs.getSession('probe'), null);
+        });
+
+        XQTest.test('删除与清空', () => {
+            gjs.setLocal('a', '1');
+            gjs.setLocal('b', '2');
+            gjs.rmLocal('a');
+            XQTest.eq(gjs.getLocal('a'), null);
+            XQTest.eq(gjs.getLocal('b'), '2');
+            gjs.clearLocal();
+            XQTest.eq(gjs.getLocal('b'), null);
+        });
+
+        XQTest.test('cookie 值里的 = 不会被截断', () => {
+            gjs.setCookie('token', 'a=b=c', 60);
+            XQTest.eq(gjs.getCookie('token'), 'a=b=c');
+        });
+
+        XQTest.test('cookie 支持中文', () => {
+            gjs.setCookie('name', '中文 值', 60);
+            XQTest.eq(gjs.getCookie('name'), '中文 值');
+        });
+
+        XQTest.test('getCookie(name, true) 返回全部 cookie', () => {
+            gjs.setCookie('one', '1', 60);
+            gjs.setCookie('two', '2', 60);
+            const all = gjs.getCookie(null, true);
+            XQTest.eq(all.one, '1');
+            XQTest.eq(all.two, '2');
+        });
+
+        XQTest.test('rmCookie 之后读不到', () => {
+            gjs.setCookie('gone', 'x', 60);
+            XQTest.eq(gjs.rmCookie('gone'), true);
+            XQTest.eq(gjs.getCookie('gone'), '');
+        });
+
+        XQTest.test('非法参数不写入 cookie', () => {
+            XQTest.eq(gjs.setCookie('', 'x', 60), false);
+            XQTest.eq(gjs.setCookie('name', null, 60), false);
+            XQTest.eq(gjs.setCookie('name', 'x', 'sixty'), false);
+        });
+
+        const output = document.getElementById('output');
+        const probe = document.getElementById('probe');
+
+        document.getElementById('btnSave').addEventListener('click', () => {
+            gjs.setLocal('demo', probe.value);
+            output.textContent = '已写入 ' + JSON.stringify(probe.value);
+        });
+        document.getElementById('btnRead').addEventListener('click', () => {
+            output.textContent = 'getLocal = ' + JSON.stringify(gjs.getLocal('demo'));
+        });
+        document.getElementById('btnDrop').addEventListener('click', () => {
+            gjs.rmLocal('demo');
+            output.textContent = '已删除，读取结果 = ' + JSON.stringify(gjs.getLocal('demo'));
+        });
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

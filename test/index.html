@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xqgjs 测试套件</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>xqgjs 测试套件</h1>
+            <p>每个页面加载仓库里已提交的构建产物，并把断言结果显示在页面上。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./browser.html">browser（UMD）</a>
+        <a href="./browser-min.html">browser.min</a>
+        <a href="./esm.html">esm</a>
+        <a href="./esm-min.html">esm.min</a>
+        <a href="./validate.html">validate</a>
+        <a href="./storage.html">storage</a>
+        <a href="./net.html">net</a>
+        <a href="./file.html">file</a>
+        <a href="./plugins.html">plugins</a>
+        <a href="./loading.html">loading</a>
+        <a href="./loading-min.html">loading.min</a>
+        <a href="./mourn.html">mourn</a>
+        <a href="./mourn-min.html">mourn.min</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>怎么跑</h2>
+        <p>页面需要通过 HTTP 打开，否则 <code>type="module"</code> 与 <code>fetch</code> 会被浏览器拦住：</p>
+        <pre class="out">npm install
+npm run serve
+# 然后打开 http://127.0.0.1:4001/test/index.html</pre>
+        <p>自动化验证也可以直接跑 <code>npm test</code>，它包含单元测试、产物一致性检查、类型检查和打包契约。</p>
+    </section>
+
+    <script src="./helpers/harness.js"></script>
+    <script>
+        // 索引页本身没有库可测，只验证导航完整性
+        const pages = Array.from(document.querySelectorAll('nav.pages a')).map((link) => link.getAttribute('href'));
+
+        XQTest.test('导航列出全部场景页', () => {
+            XQTest.ok(pages.length >= 13, 'expected at least 13 links, got ' + pages.length);
+            XQTest.eq(new Set(pages).size, pages.length, 'duplicate links');
+        });
+
+        XQTest.test('每个链接都指向存在的页面', async () => {
+            for (const href of pages) {
+                const response = await fetch(href, { method: 'HEAD' });
+                XQTest.eq(response.ok, true, href + ' -> HTTP ' + response.status);
+            }
+        });
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

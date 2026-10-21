@@ -1,22 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>默哀案例</title>
-    <script src="../lib/mourn/mourn.min.js" id="xqmourn"></script>
-    <style>
-        h2 {
-            color: #f00;
-        }
-        p {
-            color: #f0f;
-        }
-    </style>
+    <title>mourn · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
 </head>
+
 <body>
-    <h2>默哀的内容！</h2>
-    <p>我是什么颜色！</p>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>mourn 组件（未压缩）</h1>
+            <p>同样不写 <code>id</code>。它之前还会用字符串整体覆盖 <code>&lt;html&gt;</code> 的 <code>style</code>，把页面原有内联样式一起清掉。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./plugins.html">plugins</a>
+        <a href="./loading.html">loading</a>
+        <a href="./mourn.html" aria-current="page">mourn</a>
+        <a href="./mourn-min.html">mourn.min</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <button id="btnGrey">按今天置灰</button>
+            <button id="btnClear">恢复彩色</button>
+        </div>
+        <p id="demoText">命中日期时整页会变为灰度。</p>
+    </section>
+
+    <script src="./helpers/harness.js"></script>
+    <script src="../lib/mourn/mourn.js" data-date="13.32" data-src="/fixtures/mourn.json"></script>
+    <script>
+        const html = document.documentElement;
+        const today = () => {
+            const now = new Date();
+            return (now.getMonth() + 1) + '.' + now.getDate();
+        };
+
+        XQTest.test('无 id 也能初始化并暴露 API', () => {
+            XQTest.eq(typeof window.xqMourn, 'object', 'window.xqMourn');
+            XQTest.eq(typeof window.xqMourn.check, 'function');
+        });
+
+        XQTest.test('内置日期与 data-date 合并去重', () => {
+            const list = window.xqMourn.list();
+            XQTest.eq(list.includes('7.7'), true, 'built-in date');
+            XQTest.eq(list.includes('13.32'), true, 'data-date');
+            XQTest.eq(list.length, new Set(list).size, 'no duplicates');
+        });
+
+        XQTest.test('命中今天时置灰', () => {
+            XQTest.eq(window.xqMourn.check([today()]), true);
+            XQTest.eq(html.style.filter, 'grayscale(100%)');
+            XQTest.eq(html.classList.contains('xq-mourn'), true);
+        });
+
+        XQTest.test('未命中时清除灰度', () => {
+            XQTest.eq(window.xqMourn.check(['13.32']), false);
+            XQTest.eq(html.style.filter, '');
+            XQTest.eq(html.classList.contains('xq-mourn'), false);
+        });
+
+        XQTest.test('不会破坏已有的内联样式', () => {
+            html.style.background = '#ffffff';
+            window.xqMourn.check([today()]);
+            XQTest.eq(html.style.background, 'rgb(255, 255, 255)', 'background must survive');
+            window.xqMourn.check(['13.32']);
+            XQTest.eq(html.style.background, 'rgb(255, 255, 255)', 'background must survive the reset');
+            html.style.background = '';
+        });
+
+        document.getElementById('btnGrey').addEventListener('click', () => {
+            window.xqMourn.check([today()]);
+        });
+
+        document.getElementById('btnClear').addEventListener('click', () => {
+            window.xqMourn.check(['13.32']);
+        });
+
+        XQTest.run();
+    </script>
 </body>
+
 </html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>plugins · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>组件：Drag / Tab / Carousels / xqRecord</h1>
+            <p>Drag 之前会覆盖 <code>window.onresize</code> 与 <code>document.onmousemove</code>；Carousels 的 <code>isAuto=false</code> 曾完全无效。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./validate.html">validate</a>
+        <a href="./storage.html">storage</a>
+        <a href="./net.html">net</a>
+        <a href="./file.html">file</a>
+        <a href="./plugins.html" aria-current="page">plugins</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>拖拽</h2>
+        <div class="stage" id="stage">
+            <div class="drag-box" id="dragBox">拖动我</div>
+        </div>
+    </section>
+
+    <section class="demo">
+        <h2>选项卡</h2>
+        <div class="tabs" id="tabs">
+            <button class="tab-btn" data-i="0">选项一</button>
+            <button class="tab-btn" data-i="1">选项二</button>
+            <button class="tab-btn" data-i="2">选项三</button>
+        </div>
+        <div class="panel active" data-i="0">第一个面板的内容</div>
+        <div class="panel" data-i="1">第二个面板的内容</div>
+        <div class="panel" data-i="2">第三个面板的内容</div>
+    </section>
+
+    <section class="demo">
+        <h2>轮播（关闭自动播放）</h2>
+        <div class="carousel" id="carousel">
+            <ul class="carousel-track" id="track">
+                <li>1</li>
+                <li>2</li>
+                <li>3</li>
+            </ul>
+        </div>
+        <div class="row" style="margin-top:10px">
+            <button id="prev">上一张</button>
+            <button id="next">下一张</button>
+            <div class="dots" id="dots">
+                <i class="dot active"></i><i class="dot"></i><i class="dot"></i>
+            </div>
+        </div>
+    </section>
+
+    <script src="../lib/xqgjs.js"></script>
+    <script src="./helpers/harness.js"></script>
+    <script>
+        const dragBox = document.getElementById('dragBox');
+        const stage = document.getElementById('stage');
+
+        XQTest.test('Drag 不覆盖 window.onresize', () => {
+            const sentinel = () => {};
+            window.onresize = sentinel;
+            const before = window.onresize;
+
+            const drag = new gjs.Drag(dragBox);
+            XQTest.eq(window.onresize, sentinel, 'a page handler must survive');
+            XQTest.eq(window.onresize, before);
+            drag.destroy();
+            XQTest.eq(window.onresize, sentinel, 'destroy keeps the page handler');
+        });
+
+        XQTest.test('Drag 在真实鼠标事件下移动元素', () => {
+            dragBox.style.left = '10px';
+            dragBox.style.top = '10px';
+            const drag = new gjs.Drag(dragBox);
+
+            const rect = stage.getBoundingClientRect();
+            const startX = rect.left + 20;
+            const startY = rect.top + 20;
+
+            dragBox.dispatchEvent(new MouseEvent('mousedown', {
+                bubbles: true, clientX: startX, clientY: startY
+            }));
+            document.dispatchEvent(new MouseEvent('mousemove', {
+                bubbles: true, clientX: startX + 40, clientY: startY + 20
+            }));
+            document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+
+            XQTest.eq(dragBox.style.left, '50px', 'left after drag');
+            XQTest.eq(dragBox.style.top, '30px', 'top after drag');
+            drag.destroy();
+        });
+
+        XQTest.test('Drag 释放 document 上的临时监听', () => {
+            const drag = new gjs.Drag(dragBox);
+            let moves = 0;
+            const counter = () => { moves += 1; };
+            document.addEventListener('mousemove', counter);
+
+            dragBox.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 0, clientY: 0 }));
+            dragBox.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 10, clientY: 10 }));
+
+            // 库自己的监听已经移除，只有测试加的这一个还在
+            XQTest.eq(moves, 1);
+            document.removeEventListener('mousemove', counter);
+            drag.destroy();
+        });
+
+        XQTest.test('Tab 保留无关类名并切换内容', () => {
+            const navs = Array.from(document.querySelectorAll('#tabs .tab-btn'));
+            const panels = Array.from(document.querySelectorAll('.panel'));
+            const tab = new gjs.Tab(navs, panels, 'active', 'click');
+
+            navs[1].click();
+            XQTest.eq(navs[0].classList.contains('tab-btn'), true, 'base class kept');
+            XQTest.eq(navs[0].classList.contains('active'), false);
+            XQTest.eq(navs[1].classList.contains('active'), true);
+            XQTest.eq(panels[1].classList.contains('active'), true);
+            XQTest.eq(panels[0].classList.contains('active'), false);
+
+            navs[2].click();
+            XQTest.eq(panels[2].classList.contains('active'), true);
+            XQTest.eq(panels[1].classList.contains('active'), false);
+
+            tab.destroy();
+        });
+
+        XQTest.test('Carousels 的 isAuto:false 真的不自动播放', async () => {
+            const track = document.getElementById('track');
+            const items = Array.from(track.children);
+            const dots = Array.from(document.querySelectorAll('#dots i'));
+
+            const carousel = new gjs.Carousels(track, items, document.getElementById('prev'),
+                document.getElementById('next'), dots, 'active', 100, false);
+
+            XQTest.eq(carousel.isAuto, false);
+            const start = carousel.num;
+            await new Promise((resolve) => setTimeout(resolve, 350));
+            XQTest.eq(carousel.num, start, 'num must not advance while autoplay is off');
+            carousel.destroy();
+        });
+
+        XQTest.test('Carousels 箭头切换并同步圆点', () => {
+            const track = document.getElementById('track');
+            const items = Array.from(track.children);
+            const dots = Array.from(document.querySelectorAll('#dots i'));
+
+            const carousel = new gjs.Carousels(track, items, document.getElementById('prev'),
+                document.getElementById('next'), dots, 'active', 3000, false);
+
+            document.getElementById('next').click();
+            XQTest.eq(carousel.num, 1);
+            XQTest.eq(dots[1].classList.contains('active'), true);
+            XQTest.eq(dots[0].classList.contains('active'), false);
+            XQTest.eq(dots[0].classList.contains('dot'), true, 'the dot keeps its base class');
+
+            document.getElementById('prev').click();
+            XQTest.eq(carousel.num, 0);
+
+            carousel.destroy();
+        });
+
+        XQTest.test('xqRecord 暴露构造器且空实例 stop 不抛', () => {
+            XQTest.eq(typeof gjs.xqRecord, 'function');
+            const record = new gjs.xqRecord();
+            let threw = null;
+            try {
+                record.stop();
+            } catch (error) {
+                threw = error;
+            }
+            XQTest.eq(threw, null, 'stop() on an idle recorder must be a no-op');
+        });
+    </script>
+    <script>
+        // 所有断言都跑完后，重建一次可见的演示实例
+        XQTest.run().then(() => {
+            const track = document.getElementById('track');
+            const items = Array.from(track.children);
+            const dots = Array.from(document.querySelectorAll('#dots i'));
+            window.demoCarousel = new gjs.Carousels(track, items, document.getElementById('prev'),
+                document.getElementById('next'), dots, 'active', 3000, false);
+            new gjs.Tab(Array.from(document.querySelectorAll('#tabs .tab-btn')),
+                Array.from(document.querySelectorAll('.panel')), 'active', 'click');
+            new gjs.Drag(dragBox);
+            document.body.setAttribute('data-demo-ready', 'true');
+        });
+    </script>
+</body>
+
+</html>

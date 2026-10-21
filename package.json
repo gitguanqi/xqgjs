@@ -1,28 +1,87 @@
 {
-    "name": "xqgjs",
-    "version": "1.1.2",
-    "description": "This is a like jquery package.",
-    "main": "lib/xqgjs.js",
-    "directories": {
-        "lib": "lib",
-        "test": "test"
+  "name": "xqgjs",
+  "version": "2.0.0",
+  "description": "This is a like jquery package.",
+  "main": "lib/xqgjs.js",
+  "module": "lib/xqgjs-esm.js",
+  "types": "lib/xqgjs.d.ts",
+  "unpkg": "lib/xqgjs.min.js",
+  "jsdelivr": "lib/xqgjs.min.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/xqgjs-esm.d.mts",
+        "default": "./lib/xqgjs-esm.js"
+      },
+      "require": {
+        "types": "./lib/xqgjs.d.ts",
+        "default": "./lib/xqgjs.js"
+      },
+      "default": "./lib/xqgjs.js"
     },
-    "scripts": {
-        "test": "echo Error: no test specified && exit 1",
-        "test:browser": "live-server --port=4001 --host=localhost"
+    "./esm": {
+      "types": "./lib/xqgjs-esm.d.mts",
+      "default": "./lib/xqgjs-esm.js"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/gitguanqi/xqgjs.git"
-    },
-    "keywords": [
-        "js",
-        "xqgjs"
-    ],
-    "author": "gitguanqi",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/gitguanqi/xqgjs/issues"
-    },
-    "homepage": "https://github.com/gitguanqi/xqgjs#readme"
+    "./min": "./lib/xqgjs.min.js",
+    "./esm.min": "./lib/xqgjs-esm.min.js",
+    "./loading": "./lib/loading/js/loading.js",
+    "./loading/js/loading.js": "./lib/loading/js/loading.js",
+    "./loading/css/loading.css": "./lib/loading/css/loading.css",
+    "./mourn": "./lib/mourn/mourn.js",
+    "./lib/*": "./lib/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "README.md",
+    "zh.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "lib/loading/**",
+    "lib/mourn/**"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:check": "node scripts/build.js --check",
+    "check": "node scripts/sync-esm.js --check && node scripts/check-consistency.js && node scripts/build.js --check",
+    "check:types": "tsc -p test/types/tsconfig.json",
+    "check:pack": "node scripts/check-pack.js",
+    "check:browser": "node scripts/browser-check.js",
+    "serve": "node scripts/serve.js",
+    "test:unit": "node --test test/unit/validate.test.js test/unit/time.test.js test/unit/storage.test.js test/unit/core.test.js test/unit/net.test.js test/unit/plugins.test.js test/unit/components.test.js test/unit/esm.test.js test/unit/contract.test.js",
+    "test:browser": "node scripts/serve.js",
+    "test": "npm run check && npm run test:unit && npm run check:types && npm run check:pack",
+    "prepublishOnly": "npm test",
+    "sync": "node scripts/sync-esm.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitguanqi/xqgjs.git"
+  },
+  "keywords": [
+    "js",
+    "xqgjs",
+    "dom",
+    "jquery-like"
+  ],
+  "author": "gitguanqi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gitguanqi/xqgjs/issues"
+  },
+  "homepage": "https://github.com/gitguanqi/xqgjs#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.0",
+    "typescript": "5.6.3"
+  }
 }

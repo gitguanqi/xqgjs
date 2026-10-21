@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>esm.min · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>ESM 构建（压缩）</h1>
+            <p><code>import gjs from '../lib/xqgjs-esm.min.js'</code>，确认压缩没有破坏默认导出。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./browser-min.html">browser.min</a>
+        <a href="./esm.html">esm</a>
+        <a href="./esm-min.html" aria-current="page">esm.min</a>
+        <a href="./validate.html">validate</a>
+        <a href="./storage.html">storage</a>
+        <a href="./net.html">net</a>
+        <a href="./file.html">file</a>
+        <a href="./plugins.html">plugins</a>
+        <a href="./loading.html">loading</a>
+        <a href="./mourn.html">mourn</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>可交互示例</h2>
+        <p id="demoText">压缩版 ESM 同样可以操作 DOM。</p>
+        <div class="row">
+            <button id="btnDemo">改写文本</button>
+        </div>
+    </section>
+
+    <script src="./helpers/harness.js"></script>
+    <script type="module">
+        import gjs from '../lib/xqgjs-esm.min.js';
+
+        XQTest.test('压缩版模块导入成功', () => {
+            XQTest.eq(typeof gjs, 'function');
+            XQTest.ok(/^v\d+\.\d+\.\d+$/.test(gjs.info.version), gjs.info.version);
+        });
+
+        XQTest.test('压缩版不写全局', () => {
+            XQTest.eq(typeof window.gjs, 'undefined');
+            XQTest.eq(typeof window.$g, 'undefined');
+        });
+
+        XQTest.test('关键方法保留', () => {
+            for (const name of ['checkEmail', 'secondToTime', 'getUrlArgs', 'each', 'ready']) {
+                XQTest.eq(typeof gjs[name], 'function', name);
+            }
+        });
+
+        XQTest.test('原型链与实例可用', () => {
+            XQTest.eq(gjs.fn.init.prototype, gjs.fn);
+            XQTest.eq(gjs('#demoText').length, 1);
+        });
+
+        XQTest.test('校验函数可用', () => {
+            XQTest.eq(gjs.checkEmail('user@example.com'), true);
+            XQTest.eq(gjs.checkPost('ab'), false);
+        });
+
+        document.getElementById('btnDemo').addEventListener('click', () => {
+            gjs('#demoText').text('压缩版 ESM 已改写这段文字');
+        });
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

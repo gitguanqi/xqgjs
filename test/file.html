@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>file · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>文件与剪贴板</h1>
+            <p><code>downloadFile</code> 之前把 Blob 传给 <code>revokeObjectURL</code>；<code>importFile</code> 依赖调用方的 <code>this</code> 与固定的 <code>#demo</code>。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./validate.html">validate</a>
+        <a href="./storage.html">storage</a>
+        <a href="./net.html">net</a>
+        <a href="./file.html" aria-current="page">file</a>
+        <a href="./plugins.html">plugins</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <button id="btnDownload">下载示例图片</button>
+            <button id="btnExcel">导出表格</button>
+            <button id="btnCopy">复制文字</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+            <input id="fileInput" type="file" accept=".xlsx,.xls">
+        </div>
+        <p id="copySource">这段文字会被复制到剪贴板。</p>
+        <div id="demo">导入结果会显示在这里。</div>
+        <pre class="out" id="output">等待操作…</pre>
+        <table id="tableExcel" hidden>
+            <tr><td>列一</td><td>列二</td></tr>
+            <tr><td>1</td><td>2</td></tr>
+        </table>
+    </section>
+
+    <script src="../lib/xqgjs.js"></script>
+    <script src="./helpers/harness.js"></script>
+    <script>
+        // 记录 createObjectURL / revokeObjectURL 的调用，用来证明撤销的是 URL 字符串而不是 Blob
+        const created = [];
+        const revoked = [];
+        const realCreate = URL.createObjectURL.bind(URL);
+        const realRevoke = URL.revokeObjectURL.bind(URL);
+        URL.createObjectURL = function (blob) {
+            const url = realCreate(blob);
+            created.push({ url, blob });
+            return url;
+        };
+        URL.revokeObjectURL = function (url) {
+            revoked.push(url);
+            realRevoke(url);
+        };
+
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        XQTest.test('downloadFile 撤销的是 URL 字符串', async () => {
+            created.length = 0;
+            revoked.length = 0;
+
+            const url = await gjs.downloadFile('./img/dlam.jpg', 'xqgjs-dlam.jpg');
+            XQTest.eq(typeof url, 'string', 'downloadFile resolves the object URL');
+
+            await wait(80);
+            XQTest.eq(revoked.length, 1, 'exactly one revoke');
+            XQTest.eq(revoked[0], url, 'revoke receives the URL it created');
+            XQTest.eq(typeof revoked[0], 'string', 'never the Blob');
+            XQTest.eq(document.querySelectorAll('a[download]').length, 0, 'the temporary anchor is gone');
+        });
+
+        XQTest.test('exportExcel 生成下载并清理 URL', async () => {
+            created.length = 0;
+            revoked.length = 0;
+
+            const ok = gjs.exportExcel('tableExcel', 'demo.xls');
+            XQTest.eq(ok, true);
+            XQTest.eq(created.length, 1);
+
+            await wait(80);
+            XQTest.eq(revoked.length, 1);
+            XQTest.eq(revoked[0], created[0].url);
+        });
+
+        XQTest.test('exportExcel 对不存在的目标返回 false', () => {
+            XQTest.eq(gjs.exportExcel('not-here', 'x.xls'), false);
+        });
+
+        XQTest.test('copyText 返回 Promise<boolean> 且不弹 alert', async () => {
+            let alerted = 0;
+            const realAlert = window.alert;
+            window.alert = () => { alerted += 1; };
+            try {
+                const result = await gjs.copyText('copySource');
+                XQTest.eq(typeof result, 'boolean', 'resolves a boolean');
+            } finally {
+                window.alert = realAlert;
+            }
+            XQTest.eq(alerted, 0, 'no blocking alert');
+        });
+
+        XQTest.test('importFile 用 DOM 结构而不是调用方的 this', async () => {
+            // 最小的 SheetJS 替身：importFile 只用到 read 与 sheet_to_json
+            const realXLSX = window.XLSX;
+            window.XLSX = {
+                read() {
+                    return { SheetNames: ['s1'], Sheets: { s1: {} } };
+                },
+                utils: {
+                    sheet_to_json() {
+                        return [{ 列一: 1, 列二: 2 }];
+                    }
+                }
+            };
+
+            try {
+                const input = document.getElementById('fileInput');
+                const file = new File(['fake'], 'demo.xlsx');
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                input.files = transfer.files;
+
+                const rows = await gjs.importFile(input);
+                XQTest.eq(rows.length, 1);
+                XQTest.includes(document.getElementById('demo').textContent, '列一');
+            } finally {
+                window.XLSX = realXLSX;
+            }
+        });
+
+        document.getElementById('btnDownload').addEventListener('click', async () => {
+            const url = await gjs.downloadFile('./img/dlam.jpg', 'xqgjs-dlam.jpg');
+            document.getElementById('output').textContent = '已触发下载：' + url;
+        });
+
+        document.getElementById('btnExcel').addEventListener('click', () => {
+            gjs.exportExcel('tableExcel', 'xqgjs-demo.xls');
+            document.getElementById('output').textContent = '已导出 demo.xls';
+        });
+
+        document.getElementById('btnCopy').addEventListener('click', async () => {
+            const copied = await gjs.copyText('copySource');
+            document.getElementById('output').textContent = '复制结果：' + copied;
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function () {
+            gjs.importFile(this).then((rows) => {
+                document.getElementById('output').textContent = '导入 ' + rows.length + ' 行';
+            }).catch((error) => {
+                document.getElementById('output').textContent = '导入失败：' + error.message;
+            });
+        });
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>

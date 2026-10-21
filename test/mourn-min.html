@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mourn.min · xqgjs</title>
+    <link rel="icon" href="./img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./demo.css">
+</head>
+
+<body>
+    <header class="page">
+        <img src="./img/logo.svg" alt="">
+        <div>
+            <h1>mourn 组件（压缩）</h1>
+            <p>加载 <code>mourn.min.js</code>，不写 <code>id</code>，也不写 <code>data-date</code>，只依赖内置日期表。</p>
+        </div>
+    </header>
+
+    <nav class="pages" aria-label="页面导航">
+        <a href="./index.html">索引</a>
+        <a href="./browser.html">browser</a>
+        <a href="./esm.html">esm</a>
+        <a href="./plugins.html">plugins</a>
+        <a href="./loading.html">loading</a>
+        <a href="./mourn.html">mourn</a>
+        <a href="./mourn-min.html" aria-current="page">mourn.min</a>
+    </nav>
+
+    <div class="summary" id="summary">PENDING</div>
+    <ol id="checks"></ol>
+
+    <section class="demo">
+        <h2>试一试</h2>
+        <div class="row">
+            <button id="btnGrey">按今天置灰</button>
+            <button id="btnClear">恢复彩色</button>
+        </div>
+        <p id="demoText">压缩产物的行为应与未压缩版本完全一致。</p>
+    </section>
+
+    <script src="./helpers/harness.js"></script>
+    <script src="../lib/mourn/mourn.min.js" data-src="/fixtures/mourn.json"></script>
+    <script>
+        const html = document.documentElement;
+        const today = () => {
+            const now = new Date();
+            return (now.getMonth() + 1) + '.' + now.getDate();
+        };
+
+        XQTest.test('压缩产物同样暴露 window.xqMourn', () => {
+            XQTest.eq(typeof window.xqMourn, 'object', 'window.xqMourn');
+            XQTest.eq(typeof window.xqMourn.check, 'function');
+            XQTest.eq(typeof window.xqMourn.list, 'function');
+        });
+
+        XQTest.test('内置日期表在压缩后仍然可用', () => {
+            const list = window.xqMourn.list();
+            XQTest.eq(Array.isArray(list), true, 'list() returns an array');
+            XQTest.eq(list.includes('7.7'), true, 'built-in date survives minification');
+            XQTest.eq(list.length, new Set(list).size, 'no duplicates');
+        });
+
+        XQTest.test('命中今天时置灰', () => {
+            XQTest.eq(window.xqMourn.check([today()]), true);
+            XQTest.eq(html.style.filter, 'grayscale(100%)');
+            XQTest.eq(html.classList.contains('xq-mourn'), true);
+        });
+
+        XQTest.test('未命中时清除灰度', () => {
+            XQTest.eq(window.xqMourn.check(['13.32']), false);
+            XQTest.eq(html.style.filter, '');
+            XQTest.eq(html.classList.contains('xq-mourn'), false);
+        });
+
+        XQTest.test('不会破坏已有的内联样式', () => {
+            html.style.background = '#ffffff';
+            window.xqMourn.check([today()]);
+            XQTest.eq(html.style.background, 'rgb(255, 255, 255)', 'background must survive');
+            window.xqMourn.check(['13.32']);
+            XQTest.eq(html.style.background, 'rgb(255, 255, 255)', 'background must survive the reset');
+            html.style.background = '';
+        });
+
+        XQTest.test('重复调用 load() 不会重复累积日期', () => {
+            XQTest.eq(typeof window.xqMourn.load, 'function');
+            return window.xqMourn.load().then((active) => {
+                const list = window.xqMourn.list();
+                XQTest.eq(list.length, new Set(list).size, 'still no duplicates');
+                XQTest.eq(typeof active, 'boolean', 'load() resolves to a boolean');
+            });
+        });
+
+        document.getElementById('btnGrey').addEventListener('click', () => {
+            window.xqMourn.check([today()]);
+        });
+
+        document.getElementById('btnClear').addEventListener('click', () => {
+            window.xqMourn.check(['13.32']);
+        });
+
+        XQTest.run();
+    </script>
+</body>
+
+</html>
