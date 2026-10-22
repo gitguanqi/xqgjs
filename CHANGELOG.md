@@ -5,6 +5,27 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-22
+
+Documentation and packaging only — no runtime change, no export renamed, no entry point moved.
+
+### Added
+
+- `llms.txt` at the package root, wired through `"llms"` in `package.json`: one compact document
+  with the install and import forms, every public method, the entry-point table, the option
+  defaults and the browser constraints.
+- `skills/xqgjs-integration/SKILL.md`, wired through `"agents"`: entry-point selection, mount
+  order, widget teardown and the failure modes that are easy to get wrong (`http` needs a
+  pre-encoded body, `importFile` needs the `XLSX` global, `copyText` needs a user gesture, the
+  components read their options from `document.currentScript`).
+- `skills/xqgjs-integration/references/api.md` and `references/components.md` for the full method
+  tables and the `loading` / `mourn` contract.
+- `test/unit/agent-metadata.test.js`, part of `npm run test:unit`: it derives the public surface
+  from `lib/xqgjs.js` and `lib/xqgjs-esm.d.mts` and fails when `llms.txt` misses a method, an
+  entry point or a named type, when a `"llms"` / `"agents"` target is not shipped, when a skill
+  reference is repository-only, or when a placeholder is left behind.
+- `files` now ships `llms.txt` and `skills`, and `npm run check:pack` requires both in the tarball.
+
 ## [2.0.0] - 2026-10-20
 
 This release fixes the load path, the build pipeline and a long list of runtime defects. The
@@ -98,4 +119,5 @@ public method names are unchanged — no `getnNavInfo`, `checkpassWord`, `dealy`
 Not tracked. The version in `package.json` was `1.1.2` while `gjs.info.version` reported
 `v1.0.2`, and the two builds disagreed on the release date — one of the things 2.0.0 fixes.
 
+[2.1.0]: https://github.com/gitguanqi/xqgjs/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/gitguanqi/xqgjs/compare/v1.1.2...v2.0.0

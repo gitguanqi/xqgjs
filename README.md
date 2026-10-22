@@ -13,7 +13,7 @@ cookies, XHR wrappers, plus a few self-contained widgets.
 ```js
 // release metadata, kept in sync with package.json
 console.log(gjs.info);
-// {name: 'gjs', date: '2026-10-20', version: 'v2.0.0'}
+// {name: 'gjs', date: '2026-10-22', version: 'v2.1.0'}
 ```
 
 ## Install
@@ -285,6 +285,28 @@ Both read their options from `data-*` attributes on their own `<script>` tag, ne
 - `data-date` / `data-src`: extra dates / an override for the remote date list
 - `mourn` only touches `html.style.filter` and `html.classList`, so other inline styles survive
 - `mourn`'s remote fetch has an 8s timeout and a `catch`, so an offline page still renders
+
+## For AI agents
+
+The package ships machine-readable guidance, so an agent can integrate it without reading the
+whole README:
+
+| File | Declared in | Contents |
+| --- | --- | --- |
+| [`llms.txt`](./llms.txt) | `"llms"` | compact API reference: every export, the entry points, key options and the browser constraints |
+| [`skills/xqgjs-integration/SKILL.md`](./skills/xqgjs-integration/SKILL.md) | `"agents"` | integration workflow: entry selection, mount order, widget lifecycle, failure modes |
+| `skills/xqgjs-integration/references/` | via the skill | full method tables (`api.md`) and the `loading` / `mourn` component contract (`components.md`) |
+
+```text
+node_modules/xqgjs/llms.txt
+node_modules/xqgjs/skills/xqgjs-integration/SKILL.md
+```
+
+Both are plain UTF-8 text, ready to be read by an agent or pasted into a prompt. They are in
+`files`, so they are part of the published tarball, and `npm run check:pack` fails if either one
+disappears. Nothing in the runtime changed to support this — the entry points, builds and
+declarations are untouched. The `exports` map is unchanged as well, so the two documents are read
+from disk rather than imported.
 
 ## Development
 

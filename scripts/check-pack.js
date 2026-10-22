@@ -13,7 +13,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 
-const ALLOWED_PREFIXES = ['lib/', 'README.md', 'zh.md', 'CHANGELOG.md', 'LICENSE', 'package.json'];
+const ALLOWED_PREFIXES = ['lib/', 'skills/', 'llms.txt', 'README.md', 'zh.md', 'CHANGELOG.md', 'LICENSE', 'package.json'];
 const FORBIDDEN_PATTERNS = [/^test\//, /^scripts\//, /^\.git\//, /^node_modules\//, /\.test\.js$/];
 
 function run() {
@@ -59,7 +59,12 @@ function run() {
         'lib/xqgjs-esm.js',
         'lib/xqgjs-esm.min.js',
         'lib/xqgjs.d.ts',
-        'lib/xqgjs-esm.d.mts'
+        'lib/xqgjs-esm.d.mts',
+        // agent-facing metadata: an npm consumer that reads `llms` / `agents` must find them
+        'llms.txt',
+        'skills/xqgjs-integration/SKILL.md',
+        'skills/xqgjs-integration/references/api.md',
+        'skills/xqgjs-integration/references/components.md'
     ];
     for (const name of required) {
         if (!names.includes(name)) problems.push('missing from archive: ' + name);

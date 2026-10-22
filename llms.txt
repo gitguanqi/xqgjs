@@ -1,0 +1,263 @@
+# xqgjs
+
+jQuery-like helper library for the browser: DOM / class / style shortcuts, form validators,
+local & session storage, cookies, XHR and JSONP wrappers, timers, file helpers, four widgets and
+two drop-in page components. Zero runtime dependencies, ES2017 output, no IE support.
+
+## Install
+
+```sh
+npm install xqgjs
+```
+
+```html
+<script src="https://xqgj.cc/xqcdn/libs/xqgjs/xqgjs.min.js"></script>
+```
+
+## Imports
+
+```js
+import gjs from 'xqgjs';        // ESM build + lib/xqgjs-esm.d.mts
+const gjs = require('xqgjs');   // UMD build + lib/xqgjs.d.ts
+// a script tag sets window.gjs and window.$g (the same object); $g is also a global const in TS
+```
+
+Named ESM type exports: `GjsStatic`, `GjsInstance`, `GjsInfo`, `GjsSelector`, `DragInstance`,
+`TabInstance`, `CarouselsInstance`, `XqRecordInstance`, `HttpSuccess`, `HttpFailure`. CommonJS
+consumers import the shared declarations from `xqgjs/lib/types/xqgjs`.
+
+## Entry points
+
+| Specifier | File | Format |
+| --- | --- | --- |
+| `xqgjs` | `lib/xqgjs-esm.js` (import) / `lib/xqgjs.js` (require) | auto |
+| `xqgjs/esm` | `lib/xqgjs-esm.js` | ESM |
+| `xqgjs/min` | `lib/xqgjs.min.js` | UMD |
+| `xqgjs/esm.min` | `lib/xqgjs-esm.min.js` | ESM |
+| `xqgjs/loading` | `lib/loading/js/loading.js` | classic script |
+| `xqgjs/loading/js/loading.js` | same file, explicit path | classic script |
+| `xqgjs/loading/css/loading.css` | `lib/loading/css/loading.css` | stylesheet |
+| `xqgjs/mourn` | `lib/mourn/mourn.js` | classic script |
+| `xqgjs/lib/*` | any shipped file, e.g. `lib/loading/css/loading.min.css` | asset |
+
+## Exported API
+
+### Entry object
+
+- `gjs.info` — `{name, date, version}` release metadata, version kept in sync with package.json.
+- `gjs.fn` — the wrapper prototype, exposed for plugin code. Assign to `gjs.fn.myHelper` to add an
+  instance method; `gjs.fn.init.prototype === gjs.fn`.
+- `gjs.extend(options)` — copies own keys onto `gjs` when called as `gjs.extend(...)`, onto the
+  wrapper instance when called as `gjs('#x').extend(...)`; returns the target.
+- `gjs.each(list, fn)` — arrays, array-likes, `NodeList`s and plain objects; `return false` from
+  the callback breaks the loop; returns the original collection.
+- `gjs.ready(fn)` — calls `fn(gjs)` on `DOMContentLoaded`, immediately when already parsed.
+
+### Wrapper
+
+`gjs(selector)` accepts a CSS string, an `Element`, `null` or `undefined` and always returns a
+wrapper: `[0]` is the matched element or `null`, `length` is `0` or `1`, `selector` is what was
+passed in. Only the **first** match is wrapped — use `gjs.domAll` / `gjs.each` for collections.
+Instance methods, all chainable: `gjs.setAttr(name, val)`, `gjs.getAttr(name)` (string or null),
+`gjs.delAttr(name)`, `gjs.text(val)` (writes `innerText`), `gjs.html(val)` (writes `innerHTML`),
+`gjs.css(styleRules)`, `gjs.each(fn)`, `gjs.on(types, handler, capture?)`, `gjs.off(types, handler,
+capture?)`, `gjs.addCls(names)`, `gjs.delCls(names)`, `gjs.toggleCls(name, isAdd?)`,
+`gjs.hasCls(name)` (boolean). `on` / `off` accept space-separated event types.
+
+### DOM creation, lookup, traversal
+
+- `gjs.cElem(tagName)` — `document.createElement`; `gjs.cText(text)` — `createTextNode`.
+- `gjs.gId(id)`, `gjs.gCls(name)`, `gjs.gTag(name)`, `gjs.gName(name)` — live HTMLCollection /
+  NodeList lookups. `gjs.dom(selector)`, `gjs.domAll(selector)` — `querySelector(All)`.
+- `gjs.addElem(parent, child)`, `gjs.replaceElem(parent, newElem, oldElem)`,
+  `gjs.insertElem(parent, newElem, refElem?)` (`refElem` null/absent appends) and
+  `gjs.delElem(parent, child)` return `gjs`; a missing argument is a silent no-op.
+  `gjs.cloneElem(elem, isDeep = false)` returns the cloned `Node`, or `null`.
+- Attribute / content on a raw element: `gjs.text(elem, val)`, `gjs.html(elem, val)`,
+  `gjs.setAttr(elem, name, val)`, `gjs.getAttr(elem, name)`, `gjs.delAttr(elem, name)`.
+- Traversal returns nodes: `gjs.parent(n)`, `gjs.child(n)`, `gjs.first(n)`, `gjs.last(n)`,
+  `gjs.next(n)`, `gjs.prev(n)`; the `*Elem` twins skip text nodes: `gjs.parentElem(e)` (returns
+  `parentElement`), `gjs.childElem(e)`, `gjs.firstElem(e)`, `gjs.lastElem(e)`, `gjs.nextElem(e)`,
+  `gjs.prevElem(e)`. Missing input yields `null`.
+
+### Style and class
+
+- `gjs.css(elem, styleRules)` — assigns each `key` of the object to `elem.style[key]`; a non-object
+  logs a `TypeError` and returns without touching the element.
+- `gjs.class(elem, clsName)` — replaces `className` wholesale.
+- `gjs.classList(elem, classNames)` — replaces `className` from a string or array (classList itself
+  is read-only, this helper writes `className`).
+- `gjs.addCls(elem, names)`, `gjs.delCls(elem, names)` — strings may hold several
+  space-separated names, arrays are accepted. `gjs.toggleCls(elem, name, isAdd?)` — passing
+  `isAdd` forces add/remove. `gjs.hasCls(elem, name)` — boolean. `gjs.indexCls(elem, index)` —
+  `classList.item(index)` or `null`.
+
+### Validation
+
+`gjs.regAll` is the public rule table (`{name: RegExp, …}`) and is reused by all validators. Every
+validator takes one value, returns a boolean, returns `false` for non-strings, and resets
+`lastIndex` so repeated calls stay stable.
+
+- `gjs.checkName(v)` — Chinese characters, Latin letters and digits.
+- `gjs.checkUserName(v)` — starts with a letter, 5–16 word chars.
+- `gjs.checkNameTwo(v)` — Latin letters, digits, `_` and `-`, 4–16 chars.
+- `gjs.checkpassWord(v)` — at least 6 chars with a digit, an uppercase, a lowercase and one symbol
+  from `!@#$%^&*?` (a space also counts); `gjs.checkPassword(v)` is the correctly spelled alias.
+- `gjs.checkMobile(v)` — permissive international number: optional `+` and country code, digits,
+  spaces or `-`. It is not the strict mainland-China `1[34578]\d{9}` rule.
+- `gjs.checkPost(v)` — 3–12 letters or digits.
+- `gjs.checkEmail(v)` — `local@domain.tld` with a 2–4 letter TLD.
+- `gjs.checkCardId(v)` — mainland China 18-digit ID: valid province prefix, `x`/`X` accepted.
+
+### BOM, timers, navigation
+
+- `gjs.alert(val)`, `gjs.confirm(val)` (boolean), `gjs.prompt(val, tip?)` (string or null).
+- `gjs.setTimeout(fn, time?)`, `gjs.setInterval(fn, time?)` return the timer id;
+  `gjs.clearTimeout(id)`, `gjs.clearInterval(id)` clear it.
+- `gjs.open(url, target?, feature?, replaceRecord?)`, `gjs.close()`, `gjs.reload()`,
+  `gjs.toUrl(url)` (assigns `location.href`), `gjs.forward()`, `gjs.back()`, `gjs.go(num)`.
+- `gjs.getnNavInfo()` — `{appName, appVersion, appCodeName, platform, userAgent}`;
+  `gjs.checkBrowserName()` — `'Chrome' | 'IE' | 'Firefox' | 'Opera' | 'Safari' | ''`;
+  `gjs.checkIeVersion()` — `'ie11' … 'ie7'` or `'NoIe'`.
+- `gjs.getUrlArgs(url?)` — query string to `{key: value}`; `+` becomes a space, `#` is stripped,
+  a key without `=` maps to `''`, decoding never throws. No argument reads `location.search`.
+- `gjs.supportDom(name, version?)` — `document.implementation.hasFeature`. `gjs.isIE()` —
+  `ActiveXObject` sniff. `gjs.deviceType()` — `'wap'` when `ontouchstart` exists, else `'pc'`.
+- `gjs.fullScreen(elem, eventType = 'click')` — binds a handler that requests fullscreen on the
+  element itself (it is not called directly).
+
+### Events
+
+- `gjs.addEvent(elem, type, handler, capture?)`, `gjs.removeEvent(elem, type, handler, capture?)` —
+  `addEventListener` / `removeEventListener` with a graceful no-op path.
+- `gjs.stop(event)` — `stopPropagation`; `gjs.prevent(event)` — `preventDefault`.
+
+### Storage and cookies
+
+- `gjs.setLocal(name, value)` → boolean, `gjs.getLocal(name)` → string or `null`,
+  `gjs.rmLocal(name)` → boolean, `gjs.clearLocal()` → boolean.
+- Same four on session storage: `gjs.setSession`, `gjs.getSession`, `gjs.rmSession`,
+  `gjs.clearSession`.
+- Values are `encodeURIComponent`-encoded on write and decoded on read; nothing else is
+  serialised. Blocked storage (private mode, quota) makes setters return `false` and getters
+  `null` instead of throwing.
+- `gjs.setCookie(name, value, maxAge?)` → boolean, defaults to `path=/` and encodes the value;
+  `maxAge` is in seconds. Invalid arguments return `false` instead of logging.
+  `gjs.getCookie(name)` → `''` when absent and decodes the value (a `=` inside it survives);
+  `gjs.getCookie(name, true)` → all cookies as an object; `gjs.rmCookie(name)` → boolean.
+
+### Network
+
+- `gjs.http(method, url, data?)` → `Promise<{code, msg: 'get_succ', data: {info, data}}>`; rejects
+  with `{code, msg, data: {info, raw?}}` where `msg` is one of `no_xhr`, `open_fail`, `send_fail`,
+  `get_fail`, `parse_fail`, `network_error`. Any `2xx` resolves; an empty body resolves with
+  `data.data === null`; a non-JSON body rejects with `parse_fail` and keeps the text in
+  `data.raw`. `data` must already be a string (it is sent verbatim) and the request always uses
+  `Content-Type: application/x-www-form-urlencoded`.
+- `gjs.httpSimple(method, url, data, cb)` → `undefined`, reports through `cb({code, msg, data})`
+  with `code: 200` on success and `code: 101` on failure. Not a promise.
+- `gjs.jsonp(url, callbackName, onError?)` → the injected `<script>` or `null`; appends
+  `callback=<callbackName>` and removes the tag when it errors. The global `<callbackName>`
+  function must already exist.
+
+### Time
+
+- `gjs.getTime(elem)` — renders `YYYY-MM-DD HH:mm:ss` into the element, refreshes every second,
+  returns the interval id (or `null` for a missing element). `gjs.clearTime(id)` stops it.
+- `gjs.secondToTime(seconds)` — `'HH:mm:ss'`, e.g. `3661 → '01:01:01'`.
+
+### Files
+
+- `gjs.copyText(idOrElement)` → `Promise<boolean>`; uses `navigator.clipboard` and falls back to a
+  hidden textarea + `execCommand`. Copies `innerText`, resolves `false` for a missing element or
+  empty text.
+- `gjs.exportExcel(idOrElement, fileName)` → boolean; wraps the element's HTML in an `.xls` blob
+  and clicks a download link. `false` when the target is missing.
+- `gjs.importFile(input, targetId?)` → `Promise<rows>`; parses the first file with the global
+  `XLSX` (SheetJS) and writes `JSON.stringify(rows)` into `targetId` (default `'demo'`). Rejects
+  when the input has no file, when `XLSX` is missing, or when the file cannot be read.
+- `gjs.fixdata(arrayBuffer)` → binary string, for `{type: 'binary'}` readers.
+- `gjs.downloadFile(url, name?)` → `Promise<string>` (blob URL); rejects when `fetch` is missing or
+  the response is not ok. The link name defaults to `xqgjs-<file name from url>`.
+
+### Widgets
+
+Constructed with `new`, each keeps its listeners and offers `destroy()`:
+
+- `new gjs.Drag(elem)` — `drag.move(left, top)` (clamped to the viewport), `drag.cancel()`,
+  `drag.destroy()`. Throws when `elem` is missing.
+- `new gjs.Tab(navs, contents, clsName = 'active', eventType = 'click')` — pairs navs with
+  contents by index, toggles `clsName`; `destroy()`.
+- `new gjs.Carousels(contents, contentLis, arrowLeft?, arrowRight?, btns?, active = 'active',
+  dealy = 3000, isAuto = true, type = 'left')` — `move()`, `autoPlay()` (idempotent), `stop()`,
+  `toggleBtnsStyle()`, `destroy()`; `num` is the current index, `type` accepts `'left' | 'top'`.
+  `isAuto: false` really disables autoplay; arrow and dot elements are optional.
+- `new gjs.xqRecord()` — `start('audio' | 'video', selector?)` → `Promise<MediaRecorder | null>`
+  (resolves `null` when `getUserMedia` is unavailable or denied), `stop()`, `stopSet(type)` (stops
+  the tracks; omitting the type stops video tracks).
+
+### Page components
+
+Loaded through their own entry points, not from the main bundle; both are side-effectful and read
+their options from `data-*` attributes on their own `<script>` tag, so no id is required.
+
+- `xqgjs/loading` — mounts a full-screen overlay and exposes `window.xqLoading`.
+  `data-hide`: `load` (default, hide on `window.load`) / `dom` (hide on `DOMContentLoaded`) /
+  `none` (keep it until you call `hide()`). `data-auto="false"` skips the automatic mount.
+  `data-color` sets the ring colour, `data-img` adds an icon (`<img>` is omitted when absent).
+  API: `window.xqLoading.hide()`, `window.xqLoading.show()`, `window.xqLoading.get()`,
+  `window.xqLoading.mount(options?)`, and the callable itself `window.xqLoading(img?, color?,
+  {hide?, auto?}?)`. The stylesheet must be loaded separately for the ring and overlay to render.
+- `xqgjs/mourn` — greys the page out on a memorial date and exposes `window.xqMourn`.
+  `data-date` appends `M.D` dates, `data-src` overrides the remote list (default
+  `https://xqgj.cc/data/store/mourn.json`, 8s timeout, failures fall back to the built-in list).
+  API: `window.xqMourn.check(dates?)` (boolean), `window.xqMourn.load()` → `Promise<boolean>`,
+  `window.xqMourn.list()` → date array. It only touches `html.style.filter` and
+  `html.classList` (`xq-mourn`), so other inline styles survive.
+
+## Typical use
+
+```js
+import gjs from 'xqgjs';
+
+gjs.ready((g) => {
+    g('#list')
+        .addCls('ready')
+        .css({ color: '#00e5ff' })
+        .on('click', () => console.log('clicked'));
+
+    g.each(g.domAll('.row'), (i, row) => g.addCls(row, 'row--' + i));
+
+    new g.Carousels(
+        g.dom('.carousel-track'),
+        g.domAll('.carousel-track li'),
+        g.dom('.prev'),
+        g.dom('.next'),
+        g.domAll('.dots i'),
+        'active',
+        4000,
+        false
+    );
+});
+
+await gjs.http('POST', '/api/save', 'name=xqgjs&size=2');
+```
+
+## Constraints
+
+- Browser only: `require('xqgjs')` loads fine in Node, but DOM, BOM, cookie and storage helpers
+  need `window` / `document` and are not meaningful there.
+- No IE support: the output is ES2017 and no polyfill is bundled. `gjs.isIE()` and
+  `gjs.checkIeVersion()` are feature probes for analytics, not compatibility claims.
+- `$g` and `gjs` are written to the global object by the UMD build only. The ESM build never
+  touches `window`.
+- `copyText` needs a user gesture; the clipboard path also needs a secure context, otherwise the
+  textarea fallback runs.
+- `importFile` requires the `XLSX` global from SheetJS; `downloadFile` requires `fetch`; `xqRecord`
+  requires `getUserMedia` + `MediaRecorder` and a secure context.
+- Widgets and the loading overlay attach listeners: call `destroy()` (widgets) or
+  `window.xqLoading.hide()` on teardown so single-page navigation does not leak handlers.
+- `xqgjs/loading` and `xqgjs/mourn` are declared in `sideEffects`, so a bundler keeps them even
+  though nothing is imported from them. Load the minified CSS through an explicit path such as
+  `xqgjs/lib/loading/css/loading.min.css`; only the readable `loading.css` is mapped under
+  `xqgjs/loading/css/`.

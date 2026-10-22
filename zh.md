@@ -13,7 +13,7 @@
 ```js
 // 版本信息与 package.json 保持同步
 console.log(gjs.info);
-// {name: 'gjs', date: '2026-10-20', version: 'v2.0.0'}
+// {name: 'gjs', date: '2026-10-22', version: 'v2.1.0'}
 ```
 
 ## 安装
@@ -282,6 +282,26 @@ record.stopSet();
 - `data-date` / `data-src`：追加日期 / 覆盖远程日期表地址
 - `mourn` 只改 `html.style.filter` 与 `html.classList`，页面上其他内联样式不会被清掉
 - `mourn` 的远程请求带 8 秒超时与 `catch`，断网时页面照常显示
+
+## 给 AI / Agent 用
+
+包里带了机器可读的说明，Agent 不必读完整个 README 就能接入：
+
+| 文件 | 声明字段 | 内容 |
+| --- | --- | --- |
+| [`llms.txt`](./llms.txt) | `"llms"` | 精简 API 索引：全部导出、入口点、关键选项、浏览器约束 |
+| [`skills/xqgjs-integration/SKILL.md`](./skills/xqgjs-integration/SKILL.md) | `"agents"` | 集成流程：入口选择、挂载顺序、组件生命周期、常见失败原因 |
+| `skills/xqgjs-integration/references/` | 由 SKILL.md 引用 | 完整方法表（`api.md`）、`loading` / `mourn` 组件契约（`components.md`） |
+
+```text
+node_modules/xqgjs/llms.txt
+node_modules/xqgjs/skills/xqgjs-integration/SKILL.md
+```
+
+两个文件都是纯 UTF-8 文本，可以直接读或贴进 prompt。它们已列在 `files` 中，会随
+`npm publish` 一起发布，`npm run check:pack` 也会在任一文件缺失时失败。为支持这一点没有改动
+任何运行时行为：`main` / `module` / `types` / `exports` 全部保持原样，因此这两份文档是从磁盘
+读取，而不是通过 `import` 引入的。
 
 ## 开发
 

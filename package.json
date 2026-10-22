@@ -1,12 +1,14 @@
 {
   "name": "xqgjs",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "This is a like jquery package.",
   "main": "lib/xqgjs.js",
   "module": "lib/xqgjs-esm.js",
   "types": "lib/xqgjs.d.ts",
   "unpkg": "lib/xqgjs.min.js",
   "jsdelivr": "lib/xqgjs.min.js",
+  "llms": "./llms.txt",
+  "agents": "./skills/xqgjs-integration/SKILL.md",
   "directories": {
     "lib": "lib",
     "test": "test"
@@ -38,6 +40,8 @@
   },
   "files": [
     "lib",
+    "llms.txt",
+    "skills",
     "README.md",
     "zh.md",
     "CHANGELOG.md",
@@ -55,11 +59,13 @@
     "check:pack": "node scripts/check-pack.js",
     "check:browser": "node scripts/browser-check.js",
     "serve": "node scripts/serve.js",
-    "test:unit": "node --test test/unit/validate.test.js test/unit/time.test.js test/unit/storage.test.js test/unit/core.test.js test/unit/net.test.js test/unit/plugins.test.js test/unit/components.test.js test/unit/esm.test.js test/unit/contract.test.js",
+    "test:unit": "node --test test/unit/validate.test.js test/unit/time.test.js test/unit/storage.test.js test/unit/core.test.js test/unit/net.test.js test/unit/plugins.test.js test/unit/components.test.js test/unit/esm.test.js test/unit/contract.test.js test/unit/agent-metadata.test.js",
     "test:browser": "node scripts/serve.js",
     "test": "npm run check && npm run test:unit && npm run check:types && npm run check:pack",
     "prepublishOnly": "npm test",
-    "sync": "node scripts/sync-esm.js"
+    "sync": "node scripts/sync-esm.js",
+    "commitlint": "commitlint --edit",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -81,7 +87,11 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "esbuild": "0.25.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.6.0",
     "typescript": "5.6.3"
   }
 }
